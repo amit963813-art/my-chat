@@ -3,21 +3,21 @@
 <head>
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
-  <title>WhatsApp Pro Private Chat</title>
+  <title>WhatsApp Private Chat</title>
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; -webkit-tap-highlight-color: transparent; }
     body { background: #0b141a; color: #e9edef; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
     .app { width: 100%; max-width: 480px; background: #0b141a; display: flex; flex-direction: column; height: 100%; position: relative; border-left: 1px solid #222e35; border-right: 1px solid #222e35; }
 
     /* Login Screen */
-    #login-screen { padding: 30px 24px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 15px; background: #111b21; }
+    #login-screen { padding: 30px 24px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 14px; background: #111b21; }
     .wa-logo { width: 68px; height: 68px; background: #00a884; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 6px; font-size: 34px; color: #111b21; }
     #login-screen h2 { text-align: center; color: #e9edef; font-size: 22px; }
-    #login-screen p { text-align: center; color: #8696a0; font-size: 13px; margin-bottom: 8px; }
+    #login-screen p { text-align: center; color: #8696a0; font-size: 13px; margin-bottom: 6px; }
     .login-input { padding: 14px 16px; border-radius: 10px; border: 1px solid #2a3942; background: #202c33; color: #e9edef; font-size: 16px; outline: none; }
     .login-input:focus { border-color: #00a884; }
-    .login-btn { padding: 14px; border-radius: 24px; border: none; background: #00a884; color: #111b21; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 6px; }
-    .login-btn:active { background: #029070; }
+    .login-btn { padding: 14px; border-radius: 24px; border: none; background: #00a884; color: #111b21; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 4px; }
+    #debug-msg { text-align: center; font-size: 12.5px; color: #ffd279; min-height: 18px; }
 
     /* Chat Screen */
     #chat-screen { display: none; flex-direction: column; height: 100%; }
@@ -98,7 +98,8 @@
       <p>Apna naam aur secret Room Code daal kar chat shuru karein</p>
       <input type="text" id="username" class="login-input" placeholder="Apna Naam likhein (e.g. Amit)" />
       <input type="text" id="room" class="login-input" placeholder="Secret Room Code (e.g. 7860)" />
-      <button type="button" id="start-btn" class="login-btn">Chat Shuru Karein</button>
+      <button type="button" class="login-btn" onclick="openRoomNow()">Chat Shuru Karein</button>
+      <div id="debug-msg"></div>
     </div>
 
     <!-- Active Chat Screen -->
@@ -107,63 +108,59 @@
         <div class="header-left">
           <div class="avatar" id="room-avatar">R</div>
           <div class="header-info">
-            <h3 id="room-title">Room: 7860</h3>
+            <h3 id="room-title">Room</h3>
             <span id="status-text">online</span>
           </div>
         </div>
         <div class="menu-wrap">
-          <button type="button" class="dots-btn" id="menu-btn">⋮</button>
+          <button type="button" class="dots-btn" onclick="toggleMenu()">⋮</button>
           <div class="dropdown" id="top-menu">
-            <button type="button" id="clear-btn">🧹 Clear Chat</button>
-            <button type="button" id="exit-btn" class="danger">🚪 Exit Room</button>
+            <button type="button" onclick="clearAllChat()">🧹 Clear Chat</button>
+            <button type="button" class="danger" onclick="location.reload()">🚪 Exit Room</button>
           </div>
         </div>
       </div>
 
-      <div class="messages" id="messages"></div>
+      <div class="messages" id="messages" onclick="closeMenus()"></div>
 
-      <!-- Emoji Drawer -->
       <div id="emoji-bar"></div>
 
-      <!-- Reply Preview Bar -->
       <div id="reply-bar">
         <div>
           <strong id="reply-to-user">Name</strong>
           <span id="reply-to-text">Message text</span>
         </div>
-        <button type="button" id="cancel-reply-btn">✕</button>
+        <button type="button" onclick="cancelReply()">✕</button>
       </div>
 
-      <!-- Bottom Bar -->
-      <form class="input-area" id="chat-form">
+      <div class="input-area">
         <div class="input-box">
-          <button type="button" class="bar-icon" id="emoji-btn">😊</button>
-          <input type="text" id="msg-input" placeholder="Message" autocomplete="off" />
+          <button type="button" class="bar-icon" onclick="toggleEmoji()">😊</button>
+          <input type="text" id="msg-input" placeholder="Message" autocomplete="off" oninput="onType()" onkeydown="if(event.key==='Enter'){event.preventDefault(); mainBtnClick();}" />
           <label class="bar-icon" title="Photo bhejein">
             📷
-            <input type="file" id="img-input" accept="image/*" style="display:none" />
+            <input type="file" id="img-input" accept="image/*" style="display:none" onchange="handleImgUpload(event)" />
           </label>
         </div>
-        <button type="submit" id="main-action-btn" class="action-btn">🎤</button>
-      </form>
+        <button type="button" id="main-action-btn" class="action-btn" onclick="mainBtnClick()">🎤</button>
+      </div>
     </div>
   </div>
 
   <!-- Message Options Modal -->
-  <div class="modal-bg" id="msg-modal">
-    <div class="modal-card" id="modal-card">
-      <button type="button" id="reply-opt-btn">↩️ Reply</button>
-      <button type="button" id="delete-msg-btn" class="danger">🗑️ Delete for Everyone</button>
-      <button type="button" id="close-modal-btn">Cancel</button>
+  <div class="modal-bg" id="msg-modal" onclick="this.style.display='none'">
+    <div class="modal-card" onclick="event.stopPropagation()">
+      <button type="button" onclick="doReply()">↩️ Reply</button>
+      <button type="button" id="delete-msg-btn" class="danger" onclick="doDelete()">🗑️ Delete for Everyone</button>
+      <button type="button" onclick="document.getElementById('msg-modal').style.display='none'">Cancel</button>
     </div>
   </div>
 
   <!-- Full Image Preview Modal -->
-  <div class="modal-bg" id="img-modal">
+  <div class="modal-bg" id="img-modal" onclick="this.style.display='none'">
     <img id="zoomed-img" src="" />
   </div>
 
-  <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
     import { getDatabase, ref, push, onChildAdded, onChildChanged, set, update, remove, onValue } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
@@ -179,8 +176,13 @@
       measurementId: "G-Z0SF08CR35"
     };
 
-    const app = initializeApp(firebaseConfig);
-    const db = getDatabase(app);
+    let db = null;
+    try {
+      const app = initializeApp(firebaseConfig);
+      db = getDatabase(app);
+    } catch (err) {
+      document.getElementById("debug-msg").innerText = "Error: " + err.message;
+    }
 
     let myDeviceId = localStorage.getItem("wa_device_id");
     if (!myDeviceId) {
@@ -198,61 +200,55 @@
     let audioChunks = [];
     let isRecording = false;
 
-    // Load saved inputs
-    const savedName = localStorage.getItem("wa_name");
-    const savedRoom = localStorage.getItem("wa_room");
-    if (savedName) document.getElementById("username").value = savedName;
-    if (savedRoom) document.getElementById("room").value = savedRoom;
+    if (localStorage.getItem("wa_name")) document.getElementById("username").value = localStorage.getItem("wa_name");
+    if (localStorage.getItem("wa_room")) document.getElementById("room").value = localStorage.getItem("wa_room");
 
-    // Setup Emojis
     const emojis = ["😀","😂","🥰","😍","😘","😎","😭","😡","👍","👎","🙏","❤️","💔","🔥","🎉","💯","👌","🤝","🌹","✨"];
     const emojiBar = document.getElementById("emoji-bar");
     emojis.forEach(em => {
       const sp = document.createElement("span");
       sp.innerText = em;
-      sp.addEventListener("click", () => {
+      sp.onclick = () => {
         const inp = document.getElementById("msg-input");
         inp.value += em;
-        updateInputState();
+        window.onType();
         inp.focus();
-      });
+      };
       emojiBar.appendChild(sp);
     });
 
-    function playPopSound() {
+    function escapeHtml(str) {
+      return String(str).replace(/[&<>"']/g, m => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[m]));
+    }
+
+    function playPop() {
       try {
         const ctx = new (window.AudioContext || window.webkitAudioContext)();
         const osc = ctx.createOscillator();
         const gain = ctx.createGain();
-        osc.type = "sine";
-        osc.frequency.setValueAtTime(620, ctx.currentTime);
-        osc.frequency.exponentialRampToValueAtTime(920, ctx.currentTime + 0.08);
-        gain.gain.setValueAtTime(0.08, ctx.currentTime);
-        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.frequency.setValueAtTime(650, ctx.currentTime);
+        gain.gain.setValueAtTime(0.06, ctx.currentTime);
         osc.connect(gain);
         gain.connect(ctx.destination);
         osc.start();
-        osc.stop(ctx.currentTime + 0.1);
+        osc.stop(ctx.currentTime + 0.08);
       } catch (e) {}
     }
 
-    function escapeHtml(str) {
-      return String(str).replace(/[&<>"']/g, (m) => ({
-        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
-      }[m]));
-    }
-
-    // Start Chat Button
-    document.getElementById("start-btn").addEventListener("click", () => {
+    window.openRoomNow = function() {
       const name = document.getElementById("username").value.trim();
       const room = document.getElementById("room").value.trim().toLowerCase();
       if (!name || !room) {
-        alert("Kripya apna naam aur Room Code dono likhein!");
+        document.getElementById("debug-msg").innerText = "Pehle apna naam aur Room Code likhein!";
         return;
       }
+      if (!db) {
+        document.getElementById("debug-msg").innerText = "Internet slow hai, 2 second baad phir dabaye!";
+        return;
+      }
+
       currentUser = name;
       currentRoom = room.replace(/[^a-z0-9_-]/g, "");
-
       localStorage.setItem("wa_name", currentUser);
       localStorage.setItem("wa_room", currentRoom);
 
@@ -262,120 +258,85 @@
       document.getElementById("room-avatar").innerText = currentRoom.charAt(0).toUpperCase();
 
       const messagesDiv = document.getElementById("messages");
-      messagesDiv.innerHTML = `<div class="enc-banner">🔒 Private Room (${currentRoom}) • Kisi bhi message par tap karke Reply ya Delete karein</div>`;
+      messagesDiv.innerHTML = `<div class="enc-banner">🔒 Room: ${currentRoom} • Tap message for Reply / Delete</div>`;
 
-      // Typing listener
       onValue(ref(db, "typing/" + currentRoom), (snap) => {
         const val = snap.val();
-        const statusEl = document.getElementById("status-text");
+        const st = document.getElementById("status-text");
         if (val && val.deviceId !== myDeviceId && val.isTyping) {
-          statusEl.innerText = val.user + " typing...";
+          st.innerText = val.user + " typing...";
         } else {
-          statusEl.innerText = "online";
+          st.innerText = "online";
         }
       });
 
-      // Messages listener
       const roomRef = ref(db, "rooms/" + currentRoom);
       setTimeout(() => { initialLoadDone = true; }, 1200);
 
-      onChildAdded(roomRef, (snapshot) => {
-        const data = snapshot.val();
-        const key = snapshot.key;
+      onChildAdded(roomRef, (snap) => {
+        const data = snap.val();
+        const key = snap.key;
         const isMe = data.deviceId ? (data.deviceId === myDeviceId) : (data.sender === currentUser);
+        if (!isMe && initialLoadDone && !data.deleted) playPop();
 
-        if (!isMe && initialLoadDone && !data.deleted) playPopSound();
-
-        const msgEl = document.createElement("div");
-        msgEl.id = "msg-" + key;
-        msgEl.className = "msg " + (isMe ? "me" : "other");
-        msgEl.innerHTML = buildMsgHtml(data, isMe);
-        msgEl.addEventListener("click", (ev) => {
+        const el = document.createElement("div");
+        el.id = "msg-" + key;
+        el.className = "msg " + (isMe ? "me" : "other");
+        el.innerHTML = renderBubble(data, isMe);
+        el.onclick = (ev) => {
           if (ev.target.tagName === "IMG") {
             document.getElementById("zoomed-img").src = ev.target.src;
             document.getElementById("img-modal").style.display = "flex";
             return;
           }
-          if (ev.target.tagName === "AUDIO") return;
-          openMsgOptions(key, data, isMe);
-        });
-
-        messagesDiv.appendChild(msgEl);
+          if (ev.target.tagName === "AUDIO" || data.deleted) return;
+          selectedMsg = { key, data, isMe };
+          document.getElementById("delete-msg-btn").style.display = isMe ? "block" : "none";
+          document.getElementById("msg-modal").style.display = "flex";
+        };
+        messagesDiv.appendChild(el);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
 
-      onChildChanged(roomRef, (snapshot) => {
-        const data = snapshot.val();
-        const key = snapshot.key;
-        const el = document.getElementById("msg-" + key);
+      onChildChanged(roomRef, (snap) => {
+        const data = snap.val();
+        const el = document.getElementById("msg-" + snap.key);
         if (el) {
           const isMe = data.deviceId ? (data.deviceId === myDeviceId) : (data.sender === currentUser);
-          el.innerHTML = buildMsgHtml(data, isMe);
+          el.innerHTML = renderBubble(data, isMe);
         }
       });
-    });
+    };
 
-    function buildMsgHtml(data, isMe) {
+    function renderBubble(data, isMe) {
       if (data.deleted) {
-        return `<span class="deleted-text">🚫 This message was deleted</span>
-                <span class="msg-meta"><span class="msg-time">${data.time || ""}</span></span>`;
+        return `<span class="deleted-text">🚫 This message was deleted</span><span class="msg-meta"><span class="msg-time">${data.time || ""}</span></span>`;
       }
-      let html = "";
-      if (!isMe) {
-        html += `<div class="msg-sender">${escapeHtml(data.sender)}</div>`;
-      }
-      if (data.replyTo) {
-        html += `<div class="quoted-box"><strong>${escapeHtml(data.replyTo.sender)}</strong>${escapeHtml(data.replyTo.text)}</div>`;
-      }
-      if (data.image) {
-        html += `<img src="${data.image}" class="msg-img" />`;
-      }
-      if (data.audio) {
-        html += `<audio controls src="${data.audio}"></audio>`;
-      }
-      if (data.text) {
-        html += `<span>${escapeHtml(data.text)}</span>`;
-      }
-      html += `
-        <span class="msg-meta">
-          <span class="msg-time">${data.time || ""}</span>
-          ${isMe ? `<span class="ticks">✓✓</span>` : ""}
-        </span>`;
-      return html;
+      let h = "";
+      if (!isMe) h += `<div class="msg-sender">${escapeHtml(data.sender)}</div>`;
+      if (data.replyTo) h += `<div class="quoted-box"><strong>${escapeHtml(data.replyTo.sender)}</strong>${escapeHtml(data.replyTo.text)}</div>`;
+      if (data.image) h += `<img src="${data.image}" class="msg-img" />`;
+      if (data.audio) h += `<audio controls src="${data.audio}"></audio>`;
+      if (data.text) h += `<span>${escapeHtml(data.text)}</span>`;
+      h += `<span class="msg-meta"><span class="msg-time">${data.time || ""}</span>${isMe ? `<span class="ticks">✓✓</span>` : ""}</span>`;
+      return h;
     }
 
-    function updateInputState() {
-      const text = document.getElementById("msg-input").value.trim();
-      const btn = document.getElementById("main-action-btn");
-      if (!isRecording) {
-        btn.innerText = text.length > 0 ? "➤" : "🎤";
-      }
-    }
-
-    document.getElementById("msg-input").addEventListener("input", () => {
-      updateInputState();
-      const text = document.getElementById("msg-input").value.trim();
+    window.onType = function() {
+      const txt = document.getElementById("msg-input").value.trim();
+      if (!isRecording) document.getElementById("main-action-btn").innerText = txt.length > 0 ? "➤" : "🎤";
       const tRef = ref(db, "typing/" + currentRoom);
-      set(tRef, { user: currentUser, deviceId: myDeviceId, isTyping: text.length > 0 });
+      set(tRef, { user: currentUser, deviceId: myDeviceId, isTyping: txt.length > 0 });
       clearTimeout(typingTimeout);
-      typingTimeout = setTimeout(() => {
-        set(tRef, { user: currentUser, deviceId: myDeviceId, isTyping: false });
-      }, 1500);
-    });
+      typingTimeout = setTimeout(() => set(tRef, { user: currentUser, deviceId: myDeviceId, isTyping: false }), 1500);
+    };
 
-    document.getElementById("chat-form").addEventListener("submit", (e) => {
-      e.preventDefault();
-      const input = document.getElementById("msg-input");
-      const text = input.value.trim();
-      if (text.length > 0) {
-        const now = new Date();
-        const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-        const payload = {
-          sender: currentUser,
-          deviceId: myDeviceId,
-          text: text,
-          time: timeStr
-        };
+    window.mainBtnClick = function() {
+      const inp = document.getElementById("msg-input");
+      const txt = inp.value.trim();
+      if (txt.length > 0) {
+        const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        const payload = { sender: currentUser, deviceId: myDeviceId, text: txt, time: timeStr };
         if (replyData) {
           payload.replyTo = replyData;
           replyData = null;
@@ -383,14 +344,14 @@
         }
         push(ref(db, "rooms/" + currentRoom), payload);
         set(ref(db, "typing/" + currentRoom), { user: currentUser, deviceId: myDeviceId, isTyping: false });
-        input.value = "";
-        updateInputState();
+        inp.value = "";
+        document.getElementById("main-action-btn").innerText = "🎤";
       } else {
-        toggleVoiceRecord();
+        toggleMic();
       }
-    });
+    };
 
-    async function toggleVoiceRecord() {
+    async function toggleMic() {
       const btn = document.getElementById("main-action-btn");
       if (!isRecording) {
         try {
@@ -399,28 +360,35 @@
           audioChunks = [];
           mediaRecorder.ondataavailable = e => audioChunks.push(e.data);
           mediaRecorder.onstop = () => {
-            const blob = new Blob(audioChunks, { type: "audio/webm" });
             const reader = new FileReader();
             reader.onloadend = () => {
-              const now = new Date();
-              const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-              push(ref(db, "rooms/" + currentRoom), {
-                sender: currentUser,
-                deviceId: myDeviceId,
-                audio: reader.result,
-                time: timeStr
-              });
+              const timeStr = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+              push(ref(db, "rooms/" + currentRoom), { sender: currentUser, deviceId: myDeviceId, audio: reader.result, time: timeStr });
             };
-            reader.readAsDataURL(blob);
+            reader.readAsDataURL(new Blob(audioChunks, { type: "audio/webm" }));
             stream.getTracks().forEach(t => t.stop());
           };
           mediaRecorder.start();
           isRecording = true;
           btn.classList.add("recording");
           btn.innerText = "⏹";
-        } catch (err) {
-          alert("Voice note bhejne ke liye Chrome mein Mic permission Allow karein.");
+        } catch (e) {
+          alert("Chrome mein Mic permission Allow karein.");
         }
       } else {
         mediaRecorder.stop();
-        isRecording = f
+        isRecording = false;
+        btn.classList.remove("recording");
+        btn.innerText = "🎤";
+      }
+    }
+
+    window.handleImgUpload = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+      const reader = new FileReader();
+      reader.onload = ev => {
+        const img = new Image();
+        img.onload = () => {
+          const canvas = document.createElement("canvas");
+          const scale = Math.min(1, 650 / img.
