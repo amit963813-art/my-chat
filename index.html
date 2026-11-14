@@ -1,1 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Private Live Chat</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
+    body { background: #0b141a; color: #e9edef; display: flex; justify-content: center; height: 100vh; }
+    .app { width: 100%; max-width: 480px; background: #111b21; display: flex; flex-direction: column; height: 100%; border-left: 1px solid #222e35; border-right: 1px solid #222e35; }
+    
+    /* Login Screen */
+    #login-screen { padding: 30px 20px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 15px; }
+    #login-screen h2 { text-align: center; color: #00a884; margin-bottom: 10px; }
+    input { padding: 14px; border-radius: 8px; border: 1px solid #2a3942; background: #202c33; color: #fff; font-size: 16px; outline: none; }
+    input:focus { border-color: #00a884; }
+    button { padding: 14px; border-radius: 8px; border: none; background: #00a884; color: #111b21; font-weight: bold; font-size: 16px; cursor: pointer; }
+    button:active { opacity: 0.85; }
 
+    /* Chat Screen */
+    #chat-screen { display: none; flex-direction: column; height: 100%; }
+    .header { background: #202c33; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a3942; }
+    .header h3 { font-size: 16px; color: #e9edef; }
+    .header span { font-size: 12px; color: #00a884; }
+    .leave-btn { background: #ef4444; color: white; padding: 6px 12px; font-size: 13px; border-radius: 6px; }
+    
+    .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0b141a; }
+    .msg { max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+    .msg.other { background: #202c33; align-self: flex-start; border-top-left-radius: 0; }
+    .msg.me { background: #005c4b; align-self: flex-end; border-top-right-radius: 0; }
+    .msg-sender { font-size: 11px; font-weight: bold; color: #53bdeb; margin-bottom: 3px; }
+    .msg-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 4px; }
+
+    .input-area { background: #202c33; padding: 10px; display: flex; gap: 8px; }
+    .input-area input { flex: 1; padding: 12px; border-radius: 20px; }
+    .input-area button { border-radius: 20px; padding: 0 20px; }
+  </style>
+</head>
+<body>
+  <div class="app">
+    <!-- Join Room Screen -->
+    <div id="login-screen">
+      <h2>Live Private Chat</h2>
+      <input type="text" id="username" placeholder="Apna Naam likhein (e.g. Amit)" required />
+      <input type="text" id="room" placeholder="Secret Room Code (e.g. 1234)" required />
+      <button onclick="joinChat()">Chat Shuru Karein</button>
+    </div>
+
+    <!-- Active Chat Screen -->
+    <div id="chat-screen">
+      <div class="header">
+        <div>
+          <h3 id="room-title">Room: 1234</h3>
+          <span id="user-subtitle">Online</span>
+        </div>
+        <button class="leave-btn" onclick="leaveChat()">Exit</button>
+      </div>
+      <div class="messages" id="messages"></div>
+      <form class="input-area" onsubmit="sendMessage(event)">
+        <input type="text" id="msg-input" placeholder="Message likhein..." autocomplete="off" />
+        <button type="submit">Send</button>
+      </form>
+    </div>
+  </div>
+
+  <!-- Firebase SDK -->
+  <script type="module">
+    import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
+    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+
+    const firebaseConfig = {
+      apiKey: "AIzaSyAIBl_IH3ei_Z5vKpCZuWOiSpgrPotRN3Q",
+      authDomain: "my-private-account-1e33f.firebaseapp.com",
+      databaseURL: "https://my-private-account-1e33f-default-rtdb.firebaseio.com",
+      projectId: "my-private-account-1e33f",
+      storageBucket: "my-private-account-1e33f.firebasestorage.app",
+      messagingSenderId: "127706318874",
+      appId: "1:127706318874:web:2a0b014cdb83dae30a69a3",
+      measurementId: "G-Z0SF08CR35"
+    };
+
+    const app = initializeApp(firebaseConfig);
+    const db = getDatabase(app);
+
+    let currentUser = "";
+    let currentRoom = "";
+
+    window.joinChat = function() {
+      const name = document.getElementById("username").value.trim();
+      const room = document.getElementById("room").value.trim().toLowerCase();
+      if (!name || !room) {
+        alert("Kripya apna naam aur Room Code dono likhein!");
+        return;
+      }
+      currentUser = name;
+      currentRoom = room.replace(/[^a-z0-9_-]/g, "");
+
+      document.getElementById("login-screen").style.display = "none";
+      document.getElementById("chat-screen").style.display = "flex";
+      document.getElementById("room-title").innerText = "Room: " + currentRoom;
+      document.getElementById("user-subtitle").innerText = "Logged in as " + currentUser;
+
+      const messagesDiv = document.getElementById("messages");
+      messagesDiv.innerHTML = "";
+
+      const roomRef = ref(db, "rooms/" + currentRoom);
+      onChildAdded(roomRef, (snapshot) => {
+        const data = snapshot.val();
+        const isMe = data.sender === currentUser;
+        const msgEl = document.createElement("div");
+        msgEl.className = "msg " + (isMe ? "me" : "other");
+        msgEl.innerHTML = `
+          ${!isMe ? `<div class="msg-sender">${escapeHtml(data.sender)}</div>` : ""}
+          <div>${escapeHtml(data.text)}</div>
+          <div class="msg-time">${data.time || ""}</div>
+        `;
+        messagesDiv.appendChild(msgEl);
+        messagesDiv.scrollTop = messagesDiv.scrollHeight;
+      });
+    };
+
+    window.sendMessage = function(e) {
+      e.preventDefault();
+      const input = document.getElementById("msg-input");
+      const text = input.value.trim();
+      if (!text) return;
+
+      const now = new Date();
+      const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+      push(ref(db, "rooms/" + currentRoom), {
+        sender: currentUser,
+        text: text,
+        time: timeStr
+      });
+      input.value = "";
+    };
+
+    window.leaveChat = function() {
+      location.reload();
+    };
+
+    function escapeHtml(str) {
+      return str.replace(/[&<>"']/g, (m) => ({
+        '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+      }[m]));
+    }
+  </script>
+</body>
+</html>
