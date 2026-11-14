@@ -2,63 +2,109 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>Private Live Chat</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no" />
+  <title>WhatsApp Private Chat</title>
   <style>
-    * { box-sizing: border-box; margin: 0; padding: 0; font-family: system-ui, -apple-system, sans-serif; }
-    body { background: #0b141a; color: #e9edef; display: flex; justify-content: center; height: 100vh; }
-    .app { width: 100%; max-width: 480px; background: #111b21; display: flex; flex-direction: column; height: 100%; border-left: 1px solid #222e35; border-right: 1px solid #222e35; }
-    
+    * { box-sizing: border-box; margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif; }
+    body { background: #0b141a; color: #e9edef; display: flex; justify-content: center; height: 100dvh; overflow: hidden; }
+    .app { width: 100%; max-width: 480px; background: #0b141a; display: flex; flex-direction: column; height: 100%; position: relative; border-left: 1px solid #222e35; border-right: 1px solid #222e35; }
+
     /* Login Screen */
-    #login-screen { padding: 30px 20px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 15px; }
-    #login-screen h2 { text-align: center; color: #00a884; margin-bottom: 10px; }
-    input { padding: 14px; border-radius: 8px; border: 1px solid #2a3942; background: #202c33; color: #fff; font-size: 16px; outline: none; }
-    input:focus { border-color: #00a884; }
-    button { padding: 14px; border-radius: 8px; border: none; background: #00a884; color: #111b21; font-weight: bold; font-size: 16px; cursor: pointer; }
-    button:active { opacity: 0.85; }
+    #login-screen { padding: 30px 24px; display: flex; flex-direction: column; justify-content: center; height: 100%; gap: 16px; background: #111b21; }
+    .wa-logo { width: 64px; height: 64px; background: #00a884; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 8px; font-size: 32px; color: #111b21; font-weight: bold; }
+    #login-screen h2 { text-align: center; color: #e9edef; font-size: 22px; }
+    #login-screen p { text-align: center; color: #8696a0; font-size: 13px; margin-bottom: 10px; }
+    .login-input { padding: 14px 16px; border-radius: 10px; border: 1px solid #2a3942; background: #202c33; color: #e9edef; font-size: 16px; outline: none; }
+    .login-input:focus { border-color: #00a884; }
+    .login-btn { padding: 14px; border-radius: 24px; border: none; background: #00a884; color: #111b21; font-weight: 700; font-size: 16px; cursor: pointer; margin-top: 6px; }
+    .login-btn:active { background: #029070; }
 
     /* Chat Screen */
     #chat-screen { display: none; flex-direction: column; height: 100%; }
-    .header { background: #202c33; padding: 14px 16px; display: flex; justify-content: space-between; align-items: center; border-bottom: 1px solid #2a3942; }
-    .header h3 { font-size: 16px; color: #e9edef; }
-    .header span { font-size: 12px; color: #00a884; }
-    .leave-btn { background: #ef4444; color: white; padding: 6px 12px; font-size: 13px; border-radius: 6px; }
-    
-    .messages { flex: 1; padding: 15px; overflow-y: auto; display: flex; flex-direction: column; gap: 10px; background: #0b141a; }
-    .msg { max-width: 78%; padding: 8px 12px; border-radius: 10px; font-size: 15px; line-height: 1.4; word-wrap: break-word; }
+
+    /* WhatsApp Header */
+    .header { background: #202c33; padding: 10px 12px; display: flex; align-items: center; justify-content: space-between; z-index: 10; box-shadow: 0 1px 3px rgba(0,0,0,0.4); }
+    .header-left { display: flex; align-items: center; gap: 10px; }
+    .avatar { width: 40px; height: 40px; border-radius: 50%; background: #00a884; color: #111b21; display: flex; align-items: center; justify-content: center; font-weight: bold; font-size: 18px; flex-shrink: 0; }
+    .header-info h3 { font-size: 16px; font-weight: 600; color: #e9edef; line-height: 1.2; }
+    .header-info span { font-size: 12px; color: #00a884; display: block; margin-top: 2px; }
+    .header-actions { display: flex; gap: 8px; }
+    .icon-btn { background: transparent; border: none; color: #aebac1; font-size: 13px; padding: 6px 10px; border-radius: 16px; cursor: pointer; border: 1px solid #374248; }
+    .icon-btn.danger { color: #f15c6d; border-color: rgba(241,92,109,0.3); }
+
+    /* WhatsApp Doodle Chat Area */
+    .messages {
+      flex: 1;
+      padding: 12px 14px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 6px;
+      background-color: #0b141a;
+      background-image: radial-gradient(#182229 1px, transparent 1px);
+      background-size: 18px 18px;
+    }
+    .enc-banner { background: #182229; color: #ffd279; font-size: 11.5px; text-align: center; padding: 7px 12px; border-radius: 8px; margin: 4px auto 10px; max-width: 90%; box-shadow: 0 1px 1px rgba(0,0,0,0.2); }
+
+    /* Message Bubbles */
+    .msg { max-width: 80%; padding: 6px 9px 6px 10px; border-radius: 8px; font-size: 14.5px; line-height: 1.38; word-wrap: break-word; position: relative; box-shadow: 0 1px 1px rgba(0,0,0,0.25); }
     .msg.other { background: #202c33; align-self: flex-start; border-top-left-radius: 0; }
     .msg.me { background: #005c4b; align-self: flex-end; border-top-right-radius: 0; }
-    .msg-sender { font-size: 11px; font-weight: bold; color: #53bdeb; margin-bottom: 3px; }
-    .msg-time { font-size: 10px; color: #8696a0; text-align: right; margin-top: 4px; }
+    .msg-sender { font-size: 12px; font-weight: 600; color: #53bdeb; margin-bottom: 2px; }
+    .msg-img { max-width: 100%; border-radius: 6px; margin-top: 3px; margin-bottom: 2px; display: block; }
+    .msg-meta { display: flex; justify-content: flex-end; align-items: center; gap: 4px; margin-top: 2px; float: right; margin-left: 10px; }
+    .msg-time { font-size: 10.5px; color: rgba(233, 237, 239, 0.6); }
+    .ticks { font-size: 12px; color: #53bdeb; font-weight: bold; }
 
-    .input-area { background: #202c33; padding: 10px; display: flex; gap: 8px; }
-    .input-area input { flex: 1; padding: 12px; border-radius: 20px; }
-    .input-area button { border-radius: 20px; padding: 0 20px; }
+    /* WhatsApp Bottom Input Bar */
+    .input-area { background: #0b141a; padding: 6px 8px; display: flex; align-items: center; gap: 6px; }
+    .input-box { flex: 1; background: #202c33; border-radius: 24px; display: flex; align-items: center; padding: 4px 12px; }
+    .input-box input { flex: 1; background: transparent; border: none; color: #e9edef; font-size: 15px; padding: 8px 4px; outline: none; }
+    .photo-label { color: #8696a0; font-size: 20px; cursor: pointer; padding: 4px 6px; display: flex; align-items: center; }
+    .send-btn { width: 44px; height: 44px; border-radius: 50%; border: none; background: #00a884; color: #111b21; font-size: 18px; display: flex; align-items: center; justify-content: center; cursor: pointer; flex-shrink: 0; }
+    .send-btn:active { transform: scale(0.95); }
   </style>
 </head>
 <body>
   <div class="app">
     <!-- Join Room Screen -->
     <div id="login-screen">
-      <h2>Live Private Chat</h2>
-      <input type="text" id="username" placeholder="Apna Naam likhein (e.g. Amit)" required />
-      <input type="text" id="room" placeholder="Secret Room Code (e.g. 1234)" required />
-      <button onclick="joinChat()">Chat Shuru Karein</button>
+      <div class="wa-logo">💬</div>
+      <h2>Private Messenger</h2>
+      <p>Apna naam aur secret Room Code daal kar chat shuru karein</p>
+      <input type="text" id="username" class="login-input" placeholder="Apna Naam (e.g. Amit)" />
+      <input type="text" id="room" class="login-input" placeholder="Secret Room Code (e.g. 7860)" />
+      <button class="login-btn" onclick="joinChat()">Chat Kholiye</button>
     </div>
 
-    <!-- Active Chat Screen -->
+    <!-- Active WhatsApp Chat Screen -->
     <div id="chat-screen">
       <div class="header">
-        <div>
-          <h3 id="room-title">Room: 1234</h3>
-          <span id="user-subtitle">Online</span>
+        <div class="header-left">
+          <div class="avatar" id="room-avatar">R</div>
+          <div class="header-info">
+            <h3 id="room-title">Room: 7860</h3>
+            <span id="status-text">online</span>
+          </div>
         </div>
-        <button class="leave-btn" onclick="leaveChat()">Exit</button>
+        <div class="header-actions">
+          <button class="icon-btn danger" onclick="leaveChat()">Exit</button>
+        </div>
       </div>
-      <div class="messages" id="messages"></div>
+
+      <div class="messages" id="messages">
+        <div class="enc-banner">🔒 Messages is private room mein safe hain.</div>
+      </div>
+
       <form class="input-area" onsubmit="sendMessage(event)">
-        <input type="text" id="msg-input" placeholder="Message likhein..." autocomplete="off" />
-        <button type="submit">Send</button>
+        <div class="input-box">
+          <input type="text" id="msg-input" placeholder="Message" autocomplete="off" oninput="handleTyping()" />
+          <label class="photo-label" title="Photo bhejein">
+            📷
+            <input type="file" id="img-input" accept="image/*" style="display:none" onchange="sendImage(event)" />
+          </label>
+        </div>
+        <button type="submit" class="send-btn">➤</button>
       </form>
     </div>
   </div>
@@ -66,7 +112,7 @@
   <!-- Firebase SDK -->
   <script type="module">
     import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-app.js";
-    import { getDatabase, ref, push, onChildAdded } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
+    import { getDatabase, ref, push, onChildAdded, set, onValue, onDisconnect } from "https://www.gstatic.com/firebasejs/10.12.2/firebase-database.js";
 
     const firebaseConfig = {
       apiKey: "AIzaSyAIBl_IH3ei_Z5vKpCZuWOiSpgrPotRN3Q",
@@ -84,6 +130,33 @@
 
     let currentUser = "";
     let currentRoom = "";
+    let typingTimeout = null;
+    let initialLoadDone = false;
+
+    // Auto-fill saved details
+    window.addEventListener("DOMContentLoaded", () => {
+      const savedName = localStorage.getItem("wa_name");
+      const savedRoom = localStorage.getItem("wa_room");
+      if (savedName) document.getElementById("username").value = savedName;
+      if (savedRoom) document.getElementById("room").value = savedRoom;
+    });
+
+    function playPopSound() {
+      try {
+        const ctx = new (window.AudioContext || window.webkitAudioContext)();
+        const osc = ctx.createOscillator();
+        const gain = ctx.createGain();
+        osc.type = "sine";
+        osc.frequency.setValueAtTime(600, ctx.currentTime);
+        osc.frequency.exponentialRampToValueAtTime(900, ctx.currentTime + 0.08);
+        gain.gain.setValueAtTime(0.08, ctx.currentTime);
+        gain.gain.exponentialRampToValueAtTime(0.001, ctx.currentTime + 0.1);
+        osc.connect(gain);
+        gain.connect(ctx.destination);
+        osc.start();
+        osc.stop(ctx.currentTime + 0.1);
+      } catch (e) {}
+    }
 
     window.joinChat = function() {
       const name = document.getElementById("username").value.trim();
@@ -95,28 +168,74 @@
       currentUser = name;
       currentRoom = room.replace(/[^a-z0-9_-]/g, "");
 
+      localStorage.setItem("wa_name", currentUser);
+      localStorage.setItem("wa_room", currentRoom);
+
       document.getElementById("login-screen").style.display = "none";
       document.getElementById("chat-screen").style.display = "flex";
       document.getElementById("room-title").innerText = "Room: " + currentRoom;
-      document.getElementById("user-subtitle").innerText = "Logged in as " + currentUser;
+      document.getElementById("room-avatar").innerText = currentRoom.charAt(0).toUpperCase();
 
       const messagesDiv = document.getElementById("messages");
-      messagesDiv.innerHTML = "";
+      messagesDiv.innerHTML = `<div class="enc-banner">🔒 Messages is private room (${currentRoom}) mein safe hain.</div>`;
 
+      // Typing listener
+      const typingRef = ref(db, "typing/" + currentRoom);
+      onValue(typingRef, (snap) => {
+        const val = snap.val();
+        const statusEl = document.getElementById("status-text");
+        if (val && val.user && val.user !== currentUser && val.isTyping) {
+          statusEl.innerText = val.user + " typing...";
+        } else {
+          statusEl.innerText = "online";
+        }
+      });
+
+      // Messages listener
       const roomRef = ref(db, "rooms/" + currentRoom);
+      setTimeout(() => { initialLoadDone = true; }, 1200);
+
       onChildAdded(roomRef, (snapshot) => {
         const data = snapshot.val();
         const isMe = data.sender === currentUser;
+
+        if (!isMe && initialLoadDone) {
+          playPopSound();
+        }
+
         const msgEl = document.createElement("div");
         msgEl.className = "msg " + (isMe ? "me" : "other");
-        msgEl.innerHTML = `
-          ${!isMe ? `<div class="msg-sender">${escapeHtml(data.sender)}</div>` : ""}
-          <div>${escapeHtml(data.text)}</div>
-          <div class="msg-time">${data.time || ""}</div>
+
+        let contentHtml = "";
+        if (!isMe) {
+          contentHtml += `<div class="msg-sender">${escapeHtml(data.sender)}</div>`;
+        }
+        if (data.image) {
+          contentHtml += `<img src="${data.image}" class="msg-img" />`;
+        }
+        if (data.text) {
+          contentHtml += `<span>${escapeHtml(data.text)}</span>`;
+        }
+        contentHtml += `
+          <span class="msg-meta">
+            <span class="msg-time">${data.time || ""}</span>
+            ${isMe ? `<span class="ticks">✓✓</span>` : ""}
+          </span>
         `;
+
+        msgEl.innerHTML = contentHtml;
         messagesDiv.appendChild(msgEl);
         messagesDiv.scrollTop = messagesDiv.scrollHeight;
       });
+    };
+
+    window.handleTyping = function() {
+      const tRef = ref(db, "typing/" + currentRoom);
+      set(tRef, { user: currentUser, isTyping: true });
+      clearTimeout(typingTimeout);
+      typingTimeout = setTimeout(() => {
+        set(tRef, { user: currentUser, isTyping: false });
+      }, 1500);
     };
 
     window.sendMessage = function(e) {
@@ -133,7 +252,41 @@
         text: text,
         time: timeStr
       });
+
+      set(ref(db, "typing/" + currentRoom), { user: currentUser, isTyping: false });
       input.value = "";
+    };
+
+    window.sendImage = function(e) {
+      const file = e.target.files[0];
+      if (!file) return;
+
+      const reader = new FileReader();
+      reader.onload = function(event) {
+        const img = new Image();
+        img.onload = function() {
+          const canvas = document.createElement("canvas");
+          const maxW = 600;
+          const scale = Math.min(1, maxW / img.width);
+          canvas.width = img.width * scale;
+          canvas.height = img.height * scale;
+          const ctx = canvas.getContext("2d");
+          ctx.drawImage(img, 0, 0, canvas.width, canvas.height);
+          const compressedDataUrl = canvas.toDataURL("image/jpeg", 0.65);
+
+          const now = new Date();
+          const timeStr = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+
+          push(ref(db, "rooms/" + currentRoom), {
+            sender: currentUser,
+            image: compressedDataUrl,
+            time: timeStr
+          });
+        };
+        img.src = event.target.result;
+      };
+      reader.readAsDataURL(file);
+      e.target.value = "";
     };
 
     window.leaveChat = function() {
